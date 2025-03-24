@@ -24,25 +24,11 @@ scene.add(mainLight);
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
 scene.add(ambientLight);
 
-// Visitenkarte (leicht nach links/unten verschoben)
+// Visitenkarte
 const cardMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, metalness: 0 });
 const cardGeometry = new THREE.BoxGeometry(3.5, 2, 0.05);
 const card = new THREE.Mesh(cardGeometry, cardMaterial);
-card.position.set(-0.5, -0.1, 0);
 scene.add(card);
-
-// Anpassung für mobile Geräte
-const updateCardTransform = () => {
-  if (window.innerWidth < 768) {
-    card.scale.set(0.5, 0.5, 0.5);
-    card.rotation.x = -0.5;
-  } else {
-    card.scale.set(1, 1, 1);
-    card.rotation.x = 0;
-  }
-};
-updateCardTransform();
-window.addEventListener("resize", updateCardTransform);
 
 // FontLoader für Text
 const fontLoader = new FontLoader();
@@ -107,8 +93,6 @@ fontLoader.load(
 
     window.addEventListener("mousemove", onPointerMove);
     window.addEventListener("click", onPointerClick);
-    window.addEventListener("touchmove", onPointerMove);
-    window.addEventListener("touchstart", onPointerClick);
   }
 );
 
@@ -116,10 +100,8 @@ fontLoader.load(
 let time = 0;
 const animate = () => {
   requestAnimationFrame(animate);
-
   time += 0.02;
   card.rotation.y = Math.sin(time) * 0.2;
-
   controls.update();
   renderer.render(scene, camera);
 };
