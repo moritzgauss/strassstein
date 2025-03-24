@@ -37,11 +37,13 @@ const updateCardTransform = () => {
     card.position.set(-0.5, -0.05, 0);
     card.scale.set(0.5, 0.5, 0.5);
     card.rotation.x = -0.8;
+    card.rotation.z = -0.4;
   } else {
     // Desktop: Zentriere die Karte
     card.position.set(0, 0, 0);
     card.scale.set(1, 1, 1);
     card.rotation.x = -0.8;
+    card.rotation.z = -0.4;
   }
 };
 updateCardTransform();
