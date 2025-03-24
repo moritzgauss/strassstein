@@ -5,7 +5,12 @@ import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 
 // Scene, Camera & Renderer
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+const camera = new THREE.PerspectiveCamera(
+  45,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  100
+);
 camera.position.set(0, 0, 5);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -17,7 +22,7 @@ document.body.appendChild(renderer.domElement);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
-// **Lights: Playful & Dynamic**
+// Lights: Playful & Dynamic
 const mainLight = new THREE.DirectionalLight(0xffffff, 1.5);
 mainLight.position.set(0, 3, 3);
 scene.add(mainLight);
@@ -25,11 +30,11 @@ scene.add(mainLight);
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
 scene.add(ambientLight);
 
-// **Rotating Colored Light**
+// Rotating Colored Light
 const colorLight = new THREE.PointLight(0xff0000, 2, 5);
 scene.add(colorLight);
 
-// **Card: White, Paper-like**
+// Card: White, Paper-like
 const cardMaterial = new THREE.MeshStandardMaterial({
   color: 0xffffff,
   roughness: 0.8,
@@ -40,24 +45,24 @@ const cardGeometry = new THREE.BoxGeometry(3.5, 2, 0.05);
 const card = new THREE.Mesh(cardGeometry, cardMaterial);
 scene.add(card);
 
-// **Initial Tilt & Mobile Scaling**
+// Initial Tilt & Mobile Scaling
 const updateCardTransform = () => {
   if (window.innerWidth < 768) {
-    card.scale.set(0.6, 0.6, 0.6); // **60% scale on mobile**
-    card.rotation.x = -0.2; // **Tilt back slightly**
+    card.scale.set(0.6, 0.6, 0.6); // 60% scale on mobile
+    card.rotation.x = -0.1; // Tilt back slightly
   } else {
-    card.scale.set(1, 1, 1); // **Normal scale on desktop**
-    card.rotation.x = 0; // **No tilt on desktop**
+    card.scale.set(1, 1, 1); // Normal scale on desktop
+    card.rotation.x = 0; // No tilt on desktop
   }
 };
 updateCardTransform();
 window.addEventListener("resize", updateCardTransform);
 
-// **Load Oswald Font**
+// Load Oswald Font
 const fontLoader = new FontLoader();
 fontLoader.load(
   "https://raw.githubusercontent.com/moritzgauss/strassstein/main/Oswald_Regular.json",
-  function (font) {
+  (font) => {
     const createText = (text, yOffset, size = 0.15, color = 0x000000) => {
       const material = new THREE.MeshPhysicalMaterial({
         color: color,
@@ -82,23 +87,27 @@ fontLoader.load(
       return textMesh;
     };
 
+    // Existing Texts
     createText("STRASSSTEIN CALL CENTER", 0.6, 0.2);
     createText("For Graphic Swag", 0.2, 0.15);
     createText("<3 ‹› $$", -0.2, 0.15);
 
-    // **Clickable Link**
-    const linkMesh = createText("BIGGEST INFLUENCE", -0.6, 0.12, 0x0000ff);
-    linkMesh.userData = { isLink: true };
+    // Add the Link Text
+    const linkText = createText("Visit Website", -0.6, 0.15, 0x0000ff);
+    linkText.userData = { URL: "https://youtu.be/U_IbIMUbh-k" };
 
-    // **Invisible Hitbox for Link**
-    const hitboxGeometry = new THREE.PlaneGeometry(2, 0.3);
-    const hitboxMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
+    // Invisible Hitbox for Link
+    const hitboxGeometry = new THREE.PlaneGeometry(1.5, 0.2);
+    const hitboxMaterial = new THREE.MeshBasicMaterial({
+      transparent: true,
+      opacity: 0,
+    });
     const hitbox = new THREE.Mesh(hitboxGeometry, hitboxMaterial);
     hitbox.position.set(0, -0.6, 0.031);
-    hitbox.userData = { isLink: true };
+    hitbox.userData = { URL: "https://youtu.be/U_IbIMUbh-k" };
     card.add(hitbox);
 
-    // **Raycaster for Click Detection**
+    // Raycaster for Click Detection
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
@@ -109,7 +118,11 @@ fontLoader.load(
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(card.children);
 
-      document.body.style.cursor = intersects.some((obj) => obj.object.userData.isLink) ? "pointer" : "default";
+      document.body.style.cursor = intersects.some(
+        (obj) => obj.object.userData.URL
+      )
+        ? "pointer"
+        : "default";
     }
 
     function onMouseClick(event) {
@@ -120,8 +133,8 @@ fontLoader.load(
       const intersects = raycaster.intersectObjects(card.children);
 
       for (let intersect of intersects) {
-        if (intersect.object.userData.isLink) {
-          window.open("https://www.youtube.com/watch?v=DK_0jXPuIr0", "_blank");
+        if (intersect.object.userData.URL) {
+          window.open(intersect.object.userData.URL, "_blank");
           return;
         }
       }
@@ -132,16 +145,16 @@ fontLoader.load(
   }
 );
 
-// **Animate: Add Playful Rotation & Light Movement**
+// Animate: Add Playful Rotation & Light Movement
 let time = 0;
 const animate = () => {
   requestAnimationFrame(animate);
 
-  // **Card Gentle Rotation**
+  // Card Gentle Rotation
   time += 0.02;
   card.rotation.y = Math.sin(time) * 0.2;
 
-  // **Move Light Around**
+  // Move Light Around
   colorLight.position.x = Math.sin(time) * 2;
   colorLight.position.y = Math.cos(time) * 2;
   colorLight.position.z = Math.sin(time * 0.5) * 2;
@@ -151,7 +164,7 @@ const animate = () => {
 };
 animate();
 
-// **Ensure canvas resizes properly**
+// Ensure canvas resizes properly
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
