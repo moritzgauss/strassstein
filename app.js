@@ -28,7 +28,7 @@ scene.add(ambientLight);
 const cardMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, metalness: 0 });
 const cardGeometry = new THREE.BoxGeometry(3.5, 2, 0.05);
 const card = new THREE.Mesh(cardGeometry, cardMaterial);
-card.position.set(-0.5, -0.3, 0);
+card.position.set(-0.5, -0.1, 0);
 scene.add(card);
 
 // Anpassung für mobile Geräte
@@ -49,7 +49,7 @@ const fontLoader = new FontLoader();
 fontLoader.load(
   "https://raw.githubusercontent.com/moritzgauss/strassstein/main/Oswald_Regular.json",
   function (font) {
-    const createText = (text, yOffset, size = 0.15, color = 0x000000) => {
+    const createText = (text, yOffset, size = 0.15, color = 0x000000, url = null) => {
       const material = new THREE.MeshStandardMaterial({ color: color });
       const textGeometry = new TextGeometry(text, {
         font: font,
@@ -62,8 +62,10 @@ fontLoader.load(
       textGeometry.translate(0, yOffset, 0.03);
 
       const textMesh = new THREE.Mesh(textGeometry, material);
+      if (url) {
+        textMesh.userData.url = url;
+      }
       card.add(textMesh);
-
       return textMesh;
     };
 
@@ -71,50 +73,33 @@ fontLoader.load(
     createText("For Graphic Swag", 0.2, 0.15);
     createText("<3 ‹› $$", -0.2, 0.15);
 
-    // **Klickbarer Link**
-    const linkMesh = createText("BIGGEST INFLUENCE", -0.6, 0.12, 0x0000ff);
-    linkMesh.userData = { isLink: true };
+    // **Klickbarer Link-Text**
+    const linkMesh = createText("BIGGEST INFLUENCE", -0.6, 0.12, 0x0000ff, "https://www.youtube.com/watch?v=DK_0jXPuIr0");
 
-    // **Unsichtbare Hitbox für einfacheren Klick**
-    const hitboxGeometry = new THREE.PlaneGeometry(2.2, 0.35); // Etwas größer gemacht
-    const hitboxMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
-    const hitbox = new THREE.Mesh(hitboxGeometry, hitboxMaterial);
-    hitbox.position.set(0, -0.6, 0.031);
-    hitbox.userData = { isLink: true };
-    card.add(hitbox);
-
-    // **Raycaster für Klick-Erkennung**
+    // **Raycaster für Klicks**
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
     function onPointerMove(event) {
-      const x = event.clientX || event.touches?.[0]?.clientX;
-      const y = event.clientY || event.touches?.[0]?.clientY;
-      if (!x || !y) return;
-
-      mouse.x = (x / window.innerWidth) * 2 - 1;
-      mouse.y = -(y / window.innerHeight) * 2 + 1;
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(card.children);
 
-      document.body.style.cursor = intersects.some((obj) => obj.object.userData.isLink) ? "pointer" : "default";
+      document.body.style.cursor = intersects.some((obj) => obj.object.userData.url) ? "pointer" : "default";
     }
 
     function onPointerClick(event) {
-      const x = event.clientX || event.touches?.[0]?.clientX;
-      const y = event.clientY || event.touches?.[0]?.clientY;
-      if (!x || !y) return;
-
-      mouse.x = (x / window.innerWidth) * 2 - 1;
-      mouse.y = -(y / window.innerHeight) * 2 + 1;
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(card.children);
 
       for (let intersect of intersects) {
-        if (intersect.object.userData.isLink) {
-          window.open("https://www.youtube.com/watch?v=DK_0jXPuIr0", "_blank");
+        if (intersect.object.userData.url) {
+          window.open(intersect.object.userData.url, "_blank");
           return;
         }
       }
