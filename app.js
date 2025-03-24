@@ -57,7 +57,7 @@ fontLoader.load("https://raw.githubusercontent.com/moritzgauss/strassstein/main/
     // Text hinzufügen
     createText("STRASSSTEIN CALL CENTER", 0.5);
     createText("For Graphic Swag", 0);
-    createText("◆ ♢ ❖ ◇ ⬖", -0.5);
+    createText("<3 ‹› $$", -0.5);
 });
 
 // Animation & Responsiveness
