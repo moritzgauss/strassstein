@@ -34,7 +34,7 @@ scene.add(card);
 const updateCardTransform = () => {
   if (window.innerWidth < 768) {
     // Mobile: Behalte die aktuelle Position und Skalierung
-    card.position.set(-0.5, -0.1, 0);
+    card.position.set(-0.5, -0.25, 0);
     card.scale.set(0.5, 0.5, 0.5);
     card.rotation.x = -0.5;
   } else {
