@@ -10,7 +10,6 @@ camera.position.set(0, 0, 5);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setClearColor(0x000000, 0);
 document.body.appendChild(renderer.domElement);
 
 // OrbitControls
@@ -25,15 +24,11 @@ scene.add(mainLight);
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
 scene.add(ambientLight);
 
-// Visitenkarte
-const cardMaterial = new THREE.MeshStandardMaterial({
-  color: 0xffffff,
-  roughness: 0.8,
-  metalness: 0,
-});
-
+// Visitenkarte (leicht nach links/unten verschoben)
+const cardMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, metalness: 0 });
 const cardGeometry = new THREE.BoxGeometry(3.5, 2, 0.05);
 const card = new THREE.Mesh(cardGeometry, cardMaterial);
+card.position.set(-0.5, -0.3, 0);
 scene.add(card);
 
 // Anpassung für mobile Geräte
@@ -81,7 +76,7 @@ fontLoader.load(
     linkMesh.userData = { isLink: true };
 
     // **Unsichtbare Hitbox für einfacheren Klick**
-    const hitboxGeometry = new THREE.PlaneGeometry(2, 0.3);
+    const hitboxGeometry = new THREE.PlaneGeometry(2.2, 0.35); // Etwas größer gemacht
     const hitboxMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
     const hitbox = new THREE.Mesh(hitboxGeometry, hitboxMaterial);
     hitbox.position.set(0, -0.6, 0.031);
@@ -92,9 +87,13 @@ fontLoader.load(
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
-    function onMouseMove(event) {
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    function onPointerMove(event) {
+      const x = event.clientX || event.touches?.[0]?.clientX;
+      const y = event.clientY || event.touches?.[0]?.clientY;
+      if (!x || !y) return;
+
+      mouse.x = (x / window.innerWidth) * 2 - 1;
+      mouse.y = -(y / window.innerHeight) * 2 + 1;
 
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(card.children);
@@ -102,9 +101,13 @@ fontLoader.load(
       document.body.style.cursor = intersects.some((obj) => obj.object.userData.isLink) ? "pointer" : "default";
     }
 
-    function onMouseClick(event) {
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    function onPointerClick(event) {
+      const x = event.clientX || event.touches?.[0]?.clientX;
+      const y = event.clientY || event.touches?.[0]?.clientY;
+      if (!x || !y) return;
+
+      mouse.x = (x / window.innerWidth) * 2 - 1;
+      mouse.y = -(y / window.innerHeight) * 2 + 1;
 
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(card.children);
@@ -117,8 +120,10 @@ fontLoader.load(
       }
     }
 
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("click", onMouseClick);
+    window.addEventListener("mousemove", onPointerMove);
+    window.addEventListener("click", onPointerClick);
+    window.addEventListener("touchmove", onPointerMove);
+    window.addEventListener("touchstart", onPointerClick);
   }
 );
 
