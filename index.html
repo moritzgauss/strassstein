@@ -5,8 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Strassstein Call Center</title>
     <style>
-        body { margin: 0; overflow: hidden; background: linear-gradient(to bottom, #222, #444); }
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background: url('https://i.pinimg.com/736x/7d/c3/75/7dc3759b60b2918c657830fcf8ec70af.jpg') center/cover no-repeat; 
+            position: relative; 
+        }
         canvas { display: block; }
+
+        /* Weiße Overlay-Fläche mit 30% Opazität */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.3);
+            pointer-events: none;
+        }
     </style>
     <script type="importmap">
     {
@@ -18,6 +34,7 @@
     </script>
 </head>
 <body>
+    <div class="overlay"></div>
     <script type="module" src="app.js"></script>
 </body>
 </html>
