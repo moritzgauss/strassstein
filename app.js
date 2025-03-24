@@ -40,12 +40,18 @@ const cardGeometry = new THREE.BoxGeometry(3.5, 2, 0.05);
 const card = new THREE.Mesh(cardGeometry, cardMaterial);
 scene.add(card);
 
-// **Scale down on mobile**
-const updateCardScale = () => {
-  card.scale.set(window.innerWidth < 768 ? 0.8 : 1, window.innerWidth < 768 ? 0.8 : 1, 1);
+// **Initial Tilt & Mobile Scaling**
+const updateCardTransform = () => {
+  if (window.innerWidth < 768) {
+    card.scale.set(0.6, 0.6, 0.6); // **60% scale on mobile**
+    card.rotation.x = -0.2; // **Tilt back slightly**
+  } else {
+    card.scale.set(1, 1, 1); // **Normal scale on desktop**
+    card.rotation.x = 0; // **No tilt on desktop**
+  }
 };
-updateCardScale();
-window.addEventListener("resize", updateCardScale);
+updateCardTransform();
+window.addEventListener("resize", updateCardTransform);
 
 // **Load Oswald Font**
 const fontLoader = new FontLoader();
@@ -55,15 +61,15 @@ fontLoader.load(
     const createText = (text, yOffset, size = 0.15, color = 0x000000) => {
       const material = new THREE.MeshPhysicalMaterial({
         color: color,
-        metalness: 0.6, // More reflective
-        roughness: 0.2, // Smooth look
-        clearcoat: 1, // Extra shine
+        metalness: 0.6,
+        roughness: 0.2,
+        clearcoat: 1,
       });
 
       const textGeometry = new TextGeometry(text, {
         font: font,
         size: size,
-        height: 0.05, // Slight extrusion
+        height: 0.05,
         bevelEnabled: false,
       });
 
@@ -84,7 +90,7 @@ fontLoader.load(
     const linkMesh = createText("BIGGEST INFLUENCE", -0.6, 0.12, 0x0000ff);
     linkMesh.userData = { isLink: true };
 
-    // **Bigger Invisible Hitbox for Link**
+    // **Invisible Hitbox for Link**
     const hitboxGeometry = new THREE.PlaneGeometry(2, 0.3);
     const hitboxMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
     const hitbox = new THREE.Mesh(hitboxGeometry, hitboxMaterial);
@@ -130,7 +136,7 @@ fontLoader.load(
 let time = 0;
 const animate = () => {
   requestAnimationFrame(animate);
-  
+
   // **Card Gentle Rotation**
   time += 0.02;
   card.rotation.y = Math.sin(time) * 0.2;
