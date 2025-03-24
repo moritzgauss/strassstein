@@ -36,12 +36,12 @@ const updateCardTransform = () => {
     // Mobile: Behalte die aktuelle Position und Skalierung
     card.position.set(-0.5, -0.05, 0);
     card.scale.set(0.5, 0.5, 0.5);
-    card.rotation.x = -0.5;
+    card.rotation.x = -1.2;
   } else {
     // Desktop: Zentriere die Karte
     card.position.set(0, 0, 0);
     card.scale.set(1, 1, 1);
-    card.rotation.x = 0;
+    card.rotation.x = -1.2;
   }
 };
 updateCardTransform();
