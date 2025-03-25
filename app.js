@@ -30,29 +30,12 @@ const cardGeometry = new THREE.BoxGeometry(3.5, 2, 0.05);
 const card = new THREE.Mesh(cardGeometry, cardMaterial);
 scene.add(card);
 
-// Funktion zur Anpassung der Position und Skalierung der Karte
-const updateCardTransform = () => {
-  if (window.innerWidth < 768) {
-    // Mobile: Behalte die aktuelle Position und Skalierung
-    card.position.set(-0.5, -0.1, 0);
-    card.scale.set(0.5, 0.5, 0.5);
-    card.rotation.x = -0.5;
-  } else {
-    // Desktop: Zentriere die Karte
-    card.position.set(0, 0, 0);
-    card.scale.set(1, 1, 1);
-    card.rotation.x = 0;
-  }
-};
-updateCardTransform();
-window.addEventListener("resize", updateCardTransform);
-
 // Lade die Schriftart
 const fontLoader = new FontLoader();
 
 // Funktion zum Erstellen von Text auf der Karte
 fontLoader.load(
-  "https://raw.githubusercontent.com/moritzgauss/strassstein/main/Oswald_Regular.json",
+  "https://cdn.jsdelivr.net/npm/three@0.155.0/examples/fonts/helvetiker_regular.typeface.json",
   function (font) {
     const createText = (text, yOffset, size = 0.15, color = 0xff0000, outlineColor = 0xffff00, url = null) => {
       // Haupttext-Material und Geometrie
@@ -103,8 +86,8 @@ fontLoader.load(
     createText("Contact: info@strassstein.com", -0.2, 0.12);
     createText("Visit: www.strassstein.com", -0.35, 0.12);
 
-    // Klickbarer Link-Text - auf der Rückseite
-    const linkMesh = createText("-->ENTER<--", -0.6, 0.12, 0xff0000, 0xffff00, "https://youtu.be/U_IbIMUbh-k");
+    // Klickbarer Link-Text auf der Rückseite: "Visit Website"
+    const linkMesh = createText("Visit Website", -0.6, 0.12, 0xff0000, 0xffff00, "https://apinchofsalt.de/");
 
     // Positioniere den Text auf der Rückseite der Karte (negative Z-Achse)
     linkMesh.position.set(0, 0, -0.06); // Z-Achse auf der Rückseite
@@ -162,8 +145,11 @@ fontLoader.load(
       }
     }
 
+    // Event listener für Mausbewegung (Hover-Effekt)
     window.addEventListener("mousemove", onPointerMove);
     window.addEventListener("click", onPointerClick);
+
+    // Touch-Ereignisse für mobile Geräte
     window.addEventListener("touchmove", onPointerMove);
     window.addEventListener("touchstart", onPointerClick);
   }
