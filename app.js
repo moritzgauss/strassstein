@@ -125,10 +125,11 @@ window.addEventListener("touchstart", (event) => {
 const sound = new Audio("https://raw.githubusercontent.com/moritzgauss/strassstein/refs/heads/main/Effet.mp3");
 sound.loop = false;
 
-// **Play Sound Every 10 Seconds**
-setInterval(() => {
+// **Play Sound Every Click with 50% Volume**
+window.addEventListener("click", () => {
+  sound.volume = 0.5;
   sound.play().catch((err) => console.error("Failed to play audio:", err));
-}, 10000);
+});
 
 // **Random Card Rotation Animation**
 let isRotating = false;
