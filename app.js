@@ -55,8 +55,7 @@ fontLoader.load("https://cdn.jsdelivr.net/npm/three@0.155.0/examples/fonts/helve
 
 // **Create Text Function**
 function createText(text, position, font, url = null, flip = false) {
-  const color = url ? 0x00ff00 : 0x000000; // Links green, others black
-  const textMaterial = new THREE.MeshStandardMaterial({ color });
+  const textMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 }); // Default black text
   const textGeometry = new TextGeometry(text, {
     font,
     size: 0.15,
@@ -75,19 +74,17 @@ function createText(text, position, font, url = null, flip = false) {
   if (url) setupHoverAndClick(textMesh, textMaterial, url);
 }
 
-// **Handle Hover & Click (Now Works on Mobile)**
+// **Handle Hover & Click (Now Works on Mobile & Desktop)**
 function setupHoverAndClick(textMesh, textMaterial, url) {
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
 
   function checkIntersection(event) {
     if (event.touches) {
-      // Handle touch events
       const touch = event.touches[0];
       mouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
     } else {
-      // Handle mouse events
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
     }
@@ -98,23 +95,24 @@ function setupHoverAndClick(textMesh, textMaterial, url) {
 
   function onMouseMove(event) {
     if (checkIntersection(event)) {
-      textMaterial.color.set(0x0000ff); // Change to blue on hover
+      textMaterial.color.set(0x00ff00); // Green on hover
       document.body.style.cursor = "pointer";
     } else {
-      textMaterial.color.set(0x00ff00); // Reset to green
+      textMaterial.color.set(0x000000); // Reset to black
       document.body.style.cursor = "default";
     }
   }
 
-  function onClick(event) {
+  function onMouseClick(event) {
     if (checkIntersection(event)) {
+      textMaterial.color.set(0x0000ff); // Blue on click
       window.open(url, "_blank");
     }
   }
 
   window.addEventListener("mousemove", onMouseMove);
-  window.addEventListener("click", onClick);
-  window.addEventListener("touchstart", onClick); // Added for mobile touch
+  window.addEventListener("click", onMouseClick);
+  window.addEventListener("touchstart", onMouseClick, { passive: true }); // Works on mobile
 }
 
 // **Sound Effect**
