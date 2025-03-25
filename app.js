@@ -34,40 +34,27 @@ const cardGeometry = new THREE.BoxGeometry(3.5, 2, 0.05);
 const card = new THREE.Mesh(cardGeometry, cardMaterial);
 scene.add(card);
 
-// Position & Rotate Card
-const updateCardTransform = () => {
-  card.rotation.x = THREE.MathUtils.degToRad(-45);
-  card.rotation.y = THREE.MathUtils.degToRad(15);
-};
-updateCardTransform();
-window.addEventListener("resize", updateCardTransform);
-
-// Load Fonts & Create Text
+// Font Loader
 const fontLoader = new FontLoader();
+fontLoader.load("https://cdn.jsdelivr.net/npm/three@0.155.0/examples/fonts/helvetiker_regular.typeface.json", (font) => {
+  // **Front Side Links**
+  createClickableText("STRASSSTEIN CALL CENTER", { x: 0, y: 0.6, z: 0.03 }, font);
+  createClickableText("FOR GRAPHIC SWAG", { x: 0, y: 0.2, z: 0.03 }, font);
+  createClickableText("CLICK ME", { x: 0, y: -0.2, z: 0.03 }, font, "https://example.com");
 
-// Front & Back Text Setup
-fontLoader.load(
-  "https://cdn.jsdelivr.net/npm/three@0.155.0/examples/fonts/helvetiker_regular.typeface.json",
-  (font) => {
-    // **Front Side**
-    createText("STRASSSTEIN CALL CENTER", 0.2, 0x000000, { x: 0, y: 0.6, z: 0.03 });
-    createText("FOR GRAPHIC SWAG", 0.15, 0x000000, { x: 0, y: 0.2, z: 0.03 });
-    createText("CLICK ME", 0.15, 0x0000ff, { x: 0, y: -0.2, z: 0.03 }, "https://example.com");
+  // **Back Side Links**
+  createClickableText("CONTACT DETAILS", { x: 0, y: 0.6, z: -0.03 }, font);
+  createClickableText("Phone: +123 456 789", { x: 0, y: 0.2, z: -0.03 }, font);
+  createClickableText("Email: example@email.com", { x: 0, y: -0.2, z: -0.03 }, font);
+  createClickableText("Instagram", { x: 0, y: -0.5, z: -0.03 }, font, "https://instagram.com/strasssteincallcenter");
+});
 
-    // **Back Side**
-    createText("CONTACT DETAILS", 0.15, 0x000000, { x: 0, y: 0.6, z: -0.03 });
-    createText("Phone: +123 456 789", 0.12, 0x000000, { x: 0, y: 0.2, z: -0.03 });
-    createText("Email: example@email.com", 0.12, 0x000000, { x: 0, y: -0.2, z: -0.03 });
-    createText("Instagram", 0.15, 0x0000ff, { x: 0, y: -0.5, z: -0.03 }, "https://instagram.com/strasssteincallcenter");
-  }
-);
-
-// **Create Clickable Text Function**
-function createText(text, size, color, position, url = "") {
-  const textMaterial = new THREE.MeshStandardMaterial({ color });
+// **Function to Create Clickable Text**
+function createClickableText(text, position, font, url = "") {
+  const textMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
   const textGeometry = new TextGeometry(text, {
-    font: fontLoader,
-    size,
+    font,
+    size: 0.15,
     height: 0.01,
     bevelEnabled: false
   });
@@ -78,99 +65,45 @@ function createText(text, size, color, position, url = "") {
   card.add(textMesh);
 
   if (url) {
-    textMesh.userData.isLink = true;
-    textMesh.userData.url = url;
-  }
-
-  return textMesh;
-}
-
-// **Raycasting for Click & Hover Events**
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-let hoveredObject = null;
-
-function onPointerMove(event) {
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-  raycaster.setFromCamera(mouse, camera);
-  const intersects = raycaster.intersectObjects(card.children, true);
-
-  let foundLink = false;
-  for (let obj of intersects) {
-    if (obj.object.userData.isLink) {
-      foundLink = true;
-      if (hoveredObject !== obj.object) {
-        if (hoveredObject) {
-          hoveredObject.material.color.set(0x0000ff);
-        }
-        obj.object.material.color.set(0xff0000); // Red on hover
-        hoveredObject = obj.object;
-      }
-      break;
-    }
-  }
-
-  if (!foundLink && hoveredObject) {
-    hoveredObject.material.color.set(0x0000ff);
-    hoveredObject = null;
-  }
-
-  document.body.style.cursor = foundLink ? "pointer" : "default";
-}
-
-function onPointerClick(event) {
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-  raycaster.setFromCamera(mouse, camera);
-  const intersects = raycaster.intersectObjects(card.children, true);
-
-  for (let intersect of intersects) {
-    if (intersect.object.userData.isLink) {
-      window.open(intersect.object.userData.url, "_blank");
-      return;
-    }
+    setupHoverAndClick(textMesh, textMaterial, textGeometry, url);
   }
 }
 
-window.addEventListener("mousemove", onPointerMove);
-window.addEventListener("click", onPointerClick);
+// **Function to Handle Hover & Click Effects**
+function setupHoverAndClick(textMesh, textMaterial, textGeometry, url) {
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
 
-// **Animation for Random Card Rotation**
-let isRotating = false;
+  function onMouseMove(event) {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-const startRandomRotation = () => {
-  if (isRotating) return;
-  isRotating = true;
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObject(textMesh);
 
-  const initialRotationX = card.rotation.x;
-  const initialRotationY = card.rotation.y;
-
-  const duration = 2000;
-  const startTime = performance.now();
-
-  const animateRotation = (time) => {
-    const elapsed = time - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    const easing = 1 - Math.pow(1 - progress, 3);
-
-    card.rotation.x = initialRotationX + easing * Math.PI * 2;
-    card.rotation.y = initialRotationY + easing * Math.PI * 2;
-
-    if (progress < 1) {
-      requestAnimationFrame(animateRotation);
+    if (intersects.length > 0) {
+      textMaterial.color.set(0x0000ff); // Change to blue on hover
+      textGeometry.parameters.size = 1.1;
+      document.body.style.cursor = "pointer";
     } else {
-      isRotating = false;
+      textMaterial.color.set(0x00ff00); // Reset to green
+      textGeometry.parameters.size = 1;
+      document.body.style.cursor = "default";
     }
-  };
+  }
 
-  requestAnimationFrame(animateRotation);
-};
+  function onMouseClick(event) {
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObject(textMesh);
 
-// Trigger rotation every 10 seconds
-setInterval(startRandomRotation, 10000);
+    if (intersects.length > 0) {
+      window.open(url, "_blank");
+    }
+  }
+
+  window.addEventListener("mousemove", onMouseMove);
+  window.addEventListener("click", onMouseClick);
+}
 
 // **Render Loop**
 const animate = () => {
