@@ -47,12 +47,15 @@ const updateCardTransform = () => {
 updateCardTransform();
 window.addEventListener("resize", updateCardTransform);
 
-// Function to create text and add a clickable link
+// Lade die Schriftart
+const fontLoader = new FontLoader();
+
+// Funktion zum Erstellen von Text auf der Karte
 fontLoader.load(
   "https://raw.githubusercontent.com/moritzgauss/strassstein/main/Oswald_Regular.json",
   function (font) {
     const createText = (text, yOffset, size = 0.15, color = 0xff0000, outlineColor = 0xffff00, url = null) => {
-      // Main text material and geometry
+      // Haupttext-Material und Geometrie
       const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.3, metalness: 0.5 });
       const textGeometry = new TextGeometry(text, {
         font: font,
@@ -64,44 +67,47 @@ fontLoader.load(
         bevelSegments: 3,
       });
 
-      textGeometry.center(); // Center the main text
+      textGeometry.center(); // Zentriert den Text
       textGeometry.translate(0, yOffset, 0.03);
 
       const textMesh = new THREE.Mesh(textGeometry, material);
-      textMesh.userData = { color, outlineColor, url }; // Store original colors and URL
+      textMesh.userData = { color, outlineColor, url }; // Speichert die Originalfarben und URL
 
-      // Outline material and geometry
+      // Outline-Material und Geometrie
       const outlineMaterial = new THREE.MeshStandardMaterial({ color: outlineColor, roughness: 0.5, metalness: 0.3 });
       const outlineGeometry = new TextGeometry(text, {
         font: font,
         size: size,
-        height: 0.02, // Match the height of the main text
+        height: 0.02,
         bevelEnabled: true,
-        bevelThickness: 0.005, // Match the bevel thickness
-        bevelSize: 0.002, // Match the bevel size
-        bevelSegments: 3, // Match the bevel segments
+        bevelThickness: 0.005,
+        bevelSize: 0.002,
+        bevelSegments: 3,
       });
 
-      outlineGeometry.center(); // Center the outline geometry
-      outlineGeometry.translate(0, yOffset, 0.03); // Match the position of the main text
-      outlineGeometry.scale(1.05, 1.05, 1.05); // Slightly scale up the outline
+      outlineGeometry.center(); // Zentriert die Outline-Geometrie
+      outlineGeometry.translate(0, yOffset, 0.03); // Gleiche Position wie der Haupttext
+      outlineGeometry.scale(1.05, 1.05, 1.05); // Skaliert die Outline leicht
 
       const outlineMesh = new THREE.Mesh(outlineGeometry, outlineMaterial);
-      textMesh.add(outlineMesh); // Add the outline as a child of the text
+      textMesh.add(outlineMesh); // Fügt die Outline als Kind des Textes hinzu
 
       card.add(textMesh);
       return textMesh;
     };
 
-    createText("STRASSSTEIN CALL CENTER", 0.6, 0.2);
-    createText("For Graphic Swag", 0.2, 0.15);
-    createText("<3 ‹› $$", -0.2, 0.15);
+    // Vorderseite der Karte: "STRASSSTEIN VALENTE"
+    createText("STRASSSTEIN VALENTE", 0.4, 0.2);
 
-    // Klickbarer Link-Text - placed at the back of the card
+    // Rückseite der Karte: Kontaktdetails und Link
+    createText("Contact: info@strassstein.com", -0.2, 0.12);
+    createText("Visit: www.strassstein.com", -0.35, 0.12);
+
+    // Klickbarer Link-Text - auf der Rückseite
     const linkMesh = createText("-->ENTER<--", -0.6, 0.12, 0xff0000, 0xffff00, "https://youtu.be/U_IbIMUbh-k");
 
-    // Position the clickable link to the back of the card (negative Z)
-    linkMesh.position.set(0, 0, -0.06); // Adjust Z to place it at the back
+    // Positioniere den Text auf der Rückseite der Karte (negative Z-Achse)
+    linkMesh.position.set(0, 0, -0.06); // Z-Achse auf der Rückseite
 
     // Raycaster für Klicks
     const raycaster = new THREE.Raycaster();
@@ -121,11 +127,11 @@ fontLoader.load(
           foundLink = true;
           if (hoveredObject !== obj.object) {
             if (hoveredObject) {
-              // Reset previous hovered object colors
+              // Setze vorherige Farben zurück
               hoveredObject.material.color.set(hoveredObject.userData.color);
             }
-            // Change colors for hover
-            obj.object.material.color.set(0xffff00); // Yellow text
+            // Ändere Farben für Hover-Effekt
+            obj.object.material.color.set(0xffff00); // Gelber Text
             hoveredObject = obj.object;
           }
           break;
@@ -133,7 +139,7 @@ fontLoader.load(
       }
 
       if (!foundLink && hoveredObject) {
-        // Reset colors when no link is hovered
+        // Farben zurücksetzen, wenn kein Link gefunden wird
         hoveredObject.material.color.set(hoveredObject.userData.color);
         hoveredObject = null;
       }
@@ -162,8 +168,6 @@ fontLoader.load(
     window.addEventListener("touchstart", onPointerClick);
   }
 );
-
-// ... (remaining animation and resize event handling)
 
 // Animation
 let time = 0;
