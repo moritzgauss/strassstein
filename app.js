@@ -21,89 +21,94 @@ const mainLight = new THREE.DirectionalLight(0xffffff, 1.5);
 mainLight.position.set(0, 3, 3);
 scene.add(mainLight);
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
-scene.add(ambientLight);
-
-// Visitenkarte (leicht nach links/unten verschoben)
-const cardMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, metalness: 0 });
+// Fix the card material to make it white
+const cardMaterial = new THREE.MeshStandardMaterial({
+  color: 0xffffff, // White card
+  roughness: 0.3, // Slightly smoother for a clean white look
+  metalness: 0.1,
+});
 const cardGeometry = new THREE.BoxGeometry(3.5, 2, 0.05);
 const card = new THREE.Mesh(cardGeometry, cardMaterial);
 scene.add(card);
 
-// Funktion zur Anpassung der Position und Skalierung der Karte
+// Add lights to illuminate both sides of the card
+const frontLight = new THREE.PointLight(0xffffff, 2, 15); // Front light
+frontLight.position.set(0, 3, 3); // Above and in front of the card
+scene.add(frontLight);
+
+const backLight = new THREE.PointLight(0xffffff, 4, 20); // Increased intensity
+backLight.position.set(0, -3, -3); // Behind and below the card
+scene.add(backLight);
+
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Global ambient light
+scene.add(ambientLight);
+
+// Tilt the card in the opposite direction
 const updateCardTransform = () => {
-  if (window.innerWidth < 768) {
-    // Mobile: Behalte die aktuelle Position und Skalierung
-    card.position.set(-0.5, -0.05, 0);
-    card.scale.set(0.5, 0.5, 0.5);
-    card.rotation.x = -0.8;
-    card.rotation.z = -0.4;
-  } else {
-    // Desktop: Zentriere die Karte
-    card.position.set(0, 0, 0);
-    card.scale.set(1, 1, 1);
-    card.rotation.x = -0.8;
-    card.rotation.z = -0.4;
-  }
+  card.rotation.x = THREE.MathUtils.degToRad(-45); // Tilt 45 degrees forward
+  card.rotation.y = THREE.MathUtils.degToRad(15); // Tilt 15 degrees to the right
 };
 updateCardTransform();
 window.addEventListener("resize", updateCardTransform);
 
-// FontLoader für Text
+// Load fonts and create text
 const fontLoader = new FontLoader();
+
+// Front of the card (Oswald font)
 fontLoader.load(
   "https://raw.githubusercontent.com/moritzgauss/strassstein/main/Oswald_Regular.json",
-  function (font) {
-    const createText = (text, yOffset, size = 0.15, color = 0xff0000, outlineColor = 0xffff00, url = null) => {
-      // Main text material and geometry
-      const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.3, metalness: 0.5 });
+  function (oswaldFont) {
+    const createText = (text, size = 0.15, color = 0x000000, position = { x: 0, y: 0, z: 0 }, rotation = { x: 0, y: 0, z: 0 }, isLink = false) => {
+      const material = new THREE.MeshStandardMaterial({ color: color });
       const textGeometry = new TextGeometry(text, {
-        font: font,
+        font: oswaldFont,
         size: size,
-        height: 0.02, // Less extruded text
-        bevelEnabled: true,
-        bevelThickness: 0.005, // Thin bevel
-        bevelSize: 0.002, // Small bevel
-        bevelSegments: 3, // Smooth bevel edges
+        height: 0.01, // Less extruded text
+        bevelEnabled: false, // No bevel
       });
 
-      textGeometry.center(); // Center the main text geometry
-      textGeometry.translate(0, yOffset, 0.03);
+      textGeometry.center();
 
       const textMesh = new THREE.Mesh(textGeometry, material);
-      textMesh.userData = { color, outlineColor, url }; // Store original colors and URL
+      textMesh.position.set(position.x, position.y, position.z);
+      textMesh.rotation.set(rotation.x, rotation.y, rotation.z);
 
-      // Outline material and geometry
-      const outlineMaterial = new THREE.MeshStandardMaterial({ color: outlineColor, roughness: 0.5, metalness: 0.3 });
-      const outlineGeometry = new TextGeometry(text, {
-        font: font,
-        size: size,
-        height: 0.02, // Match the height of the main text
-        bevelEnabled: true,
-        bevelThickness: 0.005, // Match the bevel thickness
-        bevelSize: 0.002, // Match the bevel size
-        bevelSegments: 3, // Match the bevel segments
-      });
+      // If the text is a link, create a group with an underline
+      if (isLink) {
+        const linkGroup = new THREE.Group();
+        textMesh.userData.isLink = true;
+        textMesh.userData.url = "https://example.com";
+        textMesh.userData.isFront = true; // Mark as front link
 
-      outlineGeometry.center(); // Center the outline geometry
-      outlineGeometry.translate(0, yOffset, 0.03); // Match the position of the main text
-      outlineGeometry.scale(1.05, 1.05, 1.05); // Slightly scale up the outline
+        // Add underline
+        const underlineGeometry = new THREE.BoxGeometry(size * 2.5, 0.02, 0.01); // Wider and thicker underline
+        const underlineMaterial = new THREE.MeshStandardMaterial({ color: color });
+        const underlineMesh = new THREE.Mesh(underlineGeometry, underlineMaterial);
+        underlineMesh.position.set(0, -size * 0.15, 0.01); // Position underline slightly below the text
+        underlineMesh.userData.isLink = true; // Ensure the underline is also clickable
+        underlineMesh.userData.url = "https://example.com";
+        underlineMesh.userData.isFront = true; // Mark as front link
 
-      const outlineMesh = new THREE.Mesh(outlineGeometry, outlineMaterial);
-      textMesh.add(outlineMesh); // Add the outline as a child of the text
+        // Add text and underline to the group
+        linkGroup.add(textMesh);
+        linkGroup.add(underlineMesh);
+        linkGroup.position.set(position.x, position.y, position.z);
+        linkGroup.rotation.set(rotation.x, rotation.y, rotation.z);
+
+        card.add(linkGroup);
+        return linkGroup;
+      }
 
       card.add(textMesh);
       return textMesh;
     };
 
-    createText("STRASSSTEIN CALL CENTER", 0.6, 0.2);
-    createText("For Graphic Swag", 0.2, 0.15);
-    createText("<3 ‹› $$", -0.2, 0.15);
+    // Correctly position the front textx
+    createText("STRASSSTEIN CALL CENTER", 0.2, 0x000000, { x: 0, y: 0.6, z: 0.03 });
+    createText("FOR GRAPHIC SWAG", 0.15, 0x000000, { x: 0, y: 0.2, z: 0.03 });
+    createText("--> CLICK ME <--", 0.15, 0x000000, { x: 0, y: -0.2, z: 0.03 }, { x: 0, y: 0, z: 0 }, true);
 
-    // Klickbarer Link-Text
-    const linkMesh = createText("-->ENTER<--", -0.6, 0.12, 0xff0000, 0xffff00, "https://youtu.be/U_IbIMUbh-k");
-
-    // Raycaster für Klicks
+    // Add hover and click effects for the links
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
     let hoveredObject = null;
@@ -113,19 +118,18 @@ fontLoader.load(
       mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
       raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(card.children);
+      const intersects = raycaster.intersectObjects(card.children, true); // Check all children of the card
 
       let foundLink = false;
+
       for (let obj of intersects) {
-        if (obj.object.userData.url) {
+        if (obj.object.userData.isLink) {
           foundLink = true;
           if (hoveredObject !== obj.object) {
             if (hoveredObject) {
-              // Reset previous hovered object colors
-              hoveredObject.material.color.set(hoveredObject.userData.color);
+              hoveredObject.material.color.set(0x000000); // Reset previous hovered object
             }
-            // Change colors for hover
-            obj.object.material.color.set(0xffff00); // Yellow text
+            obj.object.material.color.set(0xff0000); // Change to red on hover
             hoveredObject = obj.object;
           }
           break;
@@ -133,8 +137,7 @@ fontLoader.load(
       }
 
       if (!foundLink && hoveredObject) {
-        // Reset colors when no link is hovered
-        hoveredObject.material.color.set(hoveredObject.userData.color);
+        hoveredObject.material.color.set(0x000000); // Reset when no link is hovered
         hoveredObject = null;
       }
 
@@ -146,37 +149,199 @@ fontLoader.load(
       mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
       raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(card.children);
+      const intersects = raycaster.intersectObjects(card.children, true); // Check all children of the card
+
+      // Check which side of the card is visible
+      const isFrontVisible = Math.abs((card.rotation.y % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2)) < Math.PI / 2;
 
       for (let intersect of intersects) {
-        if (intersect.object.userData.url) {
-          window.open(intersect.object.userData.url, "_blank");
-          return;
+        if (intersect.object.userData.isLink) {
+          // Only allow interaction with links on the visible side
+          const isLinkOnFront = intersect.object.userData.isFront;
+          if ((isFrontVisible && isLinkOnFront) || (!isFrontVisible && !isLinkOnFront)) {
+            window.open(intersect.object.userData.url, "_blank");
+            return;
+          }
         }
       }
     }
 
     window.addEventListener("mousemove", onPointerMove);
     window.addEventListener("click", onPointerClick);
-    window.addEventListener("touchmove", onPointerMove);
-    window.addEventListener("touchstart", onPointerClick);
   }
 );
 
-// Animation
-let time = 0;
+// Back of the card (Helvetiker font)
+fontLoader.load(
+  "https://cdn.jsdelivr.net/npm/three@0.155.0/examples/fonts/helvetiker_regular.typeface.json",
+  function (helvetikerFont) {
+    const createText = (text, size, color, position, rotation, isFront, url) => {
+      const material = new THREE.MeshStandardMaterial({ color: color });
+      const textGeometry = new TextGeometry(text, {
+        font: helvetikerFont,
+        size: size,
+        height: 0.01, // Less extruded text
+        bevelEnabled: false, // No bevel
+      });
+
+      textGeometry.center();
+
+      const textMesh = new THREE.Mesh(textGeometry, material);
+      textMesh.position.set(position.x, position.y, position.z);
+      textMesh.rotation.set(rotation.x, rotation.y, rotation.z);
+
+      if (url) {
+        textMesh.userData.isLink = true;
+        textMesh.userData.isFront = isFront; // Mark whether the link is on the front or back
+        textMesh.userData.url = url;
+      }
+
+      card.add(textMesh);
+      return textMesh;
+    };
+
+    createText("CONTACT DETAILS", 0.15, 0x000000, { x: 0, y: 0.6, z: -0.03 }, { x: 0, y: Math.PI, z: 0 });
+    createText("Phone: +123 456 789", 0.12, 0x000000, { x: 0, y: 0.2, z: -0.03 }, { x: 0, y: Math.PI, z: 0 });
+    createText("Email: example@email.com", 0.12, 0x000000, { x: 0, y: -0.2, z: -0.03 }, { x: 0, y: Math.PI, z: 0 });
+
+    // Add "CLICK ME" link to the back
+    createText("--> CLICK ME <--", 0.15, 0x000000, { x: 0, y: -0.4, z: -0.03 }, { x: 0, y: Math.PI, z: 0 }, false, "https://example.com");
+
+    // Add "INSTAGRAM" link to the back
+    createText("INSTAGRAM", 0.15, 0x000000, { x: 0, y: 0, z: -0.03 }, { x: 0, y: Math.PI, z: 0 }, false, "https://instagram.com/strasssteincallcenter");
+  }
+);
+
+// Hover and Click Logic
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let hoveredObject = null;
+
+function onPointerMove(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(card.children, true);
+
+  let foundLink = false;
+
+  // Check which side of the card is visible
+  const isFrontVisible = Math.abs((card.rotation.y % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2)) < Math.PI / 2;
+
+  for (let obj of intersects) {
+    if (obj.object.userData.isLink) {
+      const isLinkOnFront = obj.object.userData.isFront;
+      if ((isFrontVisible && isLinkOnFront) || (!isFrontVisible && !isLinkOnFront)) {
+        foundLink = true;
+        if (hoveredObject !== obj.object) {
+          if (hoveredObject) {
+            hoveredObject.material.color.set(0x000000); // Reset previous hovered object
+          }
+          obj.object.material.color.set(0xff0000); // Change to red on hover
+          hoveredObject = obj.object;
+        }
+        break;
+      }
+    }
+  }
+
+  if (!foundLink && hoveredObject) {
+    hoveredObject.material.color.set(0x000000); // Reset when no link is hovered
+    hoveredObject = null;
+  }
+
+  document.body.style.cursor = foundLink ? "pointer" : "default";
+}
+
+function onPointerClick(event) {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(card.children, true);
+
+  const isFrontVisible = Math.abs((card.rotation.y % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2)) < Math.PI / 2;
+
+  for (let intersect of intersects) {
+    if (intersect.object.userData.isLink) {
+      const isLinkOnFront = intersect.object.userData.isFront;
+      if ((isFrontVisible && isLinkOnFront) || (!isFrontVisible && !isLinkOnFront)) {
+        window.open(intersect.object.userData.url, "_blank");
+        return;
+      }
+    }
+  }
+}
+
+window.addEventListener("mousemove", onPointerMove);
+window.addEventListener("click", onPointerClick);
+
+// Animation for random card rotation
+let isRotating = false;
+
+const startRandomRotation = () => {
+  if (isRotating) return; // Prevent overlapping rotations
+  isRotating = true;
+
+  const initialRotationX = card.rotation.x;
+  const initialRotationY = card.rotation.y;
+
+  const duration = 2000; // 2 seconds for the rotation
+  const startTime = performance.now();
+
+  const animateRotation = (time) => {
+    const elapsed = time - startTime;
+    const progress = Math.min(elapsed / duration, 1); // Clamp progress to [0, 1]
+    const easing = 1 - Math.pow(1 - progress, 3); // Ease-out cubic
+
+    // Rotate twice around both axes
+    card.rotation.x = initialRotationX + easing * Math.PI * 2; // 2 full turns
+    card.rotation.y = initialRotationY + easing * Math.PI * 2;
+
+    if (progress < 1) {
+      requestAnimationFrame(animateRotation);
+    } else {
+      // Add a slight bounce effect after rotation
+      const bounceDuration = 1000; // 0.5 seconds for the bounce
+      const bounceStartTime = performance.now();
+
+      const animateBounce = (bounceTime) => {
+        const bounceElapsed = bounceTime - bounceStartTime;
+        const bounceProgress = Math.min(bounceElapsed / bounceDuration, 1);
+        const bounceEasing = Math.sin(bounceProgress * Math.PI); // Bounce effect
+
+        card.rotation.x = initialRotationX + Math.PI * 4 + bounceEasing * 0.1; // Slight bounce
+        card.rotation.y = initialRotationY + Math.PI * 4 + bounceEasing * 0.1;
+
+        if (bounceProgress < 1) {
+          requestAnimationFrame(animateBounce);
+        } else {
+          isRotating = false; // Allow new rotations
+        }
+      };
+
+      requestAnimationFrame(animateBounce);
+    }
+  };
+
+  requestAnimationFrame(animateRotation);
+};
+
+// Trigger random rotation every 10 seconds
+setInterval(() => {
+  startRandomRotation();
+}, 10000);
+
+// Render loop
 const animate = () => {
   requestAnimationFrame(animate);
-
-  time += 0.02;
-  card.rotation.y = Math.sin(time) * 0.2;
-
   controls.update();
   renderer.render(scene, camera);
 };
 animate();
 
-// Fenstergröße anpassen
+// Adjust window size
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
