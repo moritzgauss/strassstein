@@ -1,40 +1,31 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Strassstein Call Center</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { width: 100vw; height: 100vh; overflow: hidden; }
-        canvas { display: block; }
-
-        /* Hintergrundbild mit Overlay */
-        body::before {
-            content: "";
-            position: fixed;
-            width: 100vw; height: 100vh;
-            background: url('https://i.pinimg.com/736x/7d/c3/75/7dc3759b60b2918c657830fcf8ec70af.jpg') no-repeat;
-            z-index: -2;
-        }
-        body::after {
-            content: "";
-            position: fixed;
-            width: 100vw; height: 100vh;
-            background: rgba(255, 255, 255, 0.3);
-            z-index: -1;
-        }
-    </style>
-    <script type="importmap">
-        {
-          "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.module.js",
-            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.155.0/examples/jsm/"
-          }
-        }
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visitenkarte</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <script type="module" src="app.js"></script>
+  <div id="3d-container">
+    <canvas id="three-canvas"></canvas>
+    <div class="card-content">
+      <div class="front">
+        <h1>STRASSSTEIN CALL CENTER</h1>
+        <p>For Graphic Swag</p>
+      </div>
+      <div class="back">
+        <p class="contact-info">Email: <span>contact@strassstein.com</span></p>
+        <p class="contact-info">Phone: <span>+123 456 789</span></p>
+        <a href="https://www.youtube.com/watch?v=DK_0jXPuIr0" target="_blank" class="link">
+          BIGGEST INFLUENCE
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>
