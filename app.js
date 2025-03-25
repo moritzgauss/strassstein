@@ -38,6 +38,9 @@ const cardGeometry = new THREE.BoxGeometry(3.5, 2, 0.05);
 const card = new THREE.Mesh(cardGeometry, cardMaterial);
 scene.add(card);
 
+// Store clickable elements
+const clickableElements = [];
+
 // Font Loader
 const fontLoader = new FontLoader();
 fontLoader.load("https://cdn.jsdelivr.net/npm/three@0.155.0/examples/fonts/helvetiker_regular.typeface.json", (font) => {
@@ -53,9 +56,9 @@ fontLoader.load("https://cdn.jsdelivr.net/npm/three@0.155.0/examples/fonts/helve
   createText("Instagram", { x: 0, y: -0.5, z: -0.03 }, font, "https://instagram.com/strasssteincallcenter", true);
 });
 
-// **Create Text Function**
+// **Create Text Function (Clickable)**
 function createText(text, position, font, url = null, flip = false) {
-  const textMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 }); // Default black text
+  const textMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 });
   const textGeometry = new TextGeometry(text, {
     font,
     size: 0.15,
@@ -67,53 +70,56 @@ function createText(text, position, font, url = null, flip = false) {
   const textMesh = new THREE.Mesh(textGeometry, textMaterial);
   textMesh.position.set(position.x, position.y, position.z);
 
-  if (flip) textMesh.rotation.y = Math.PI; // Flip text for back
+  if (flip) textMesh.rotation.y = Math.PI; // Flip text for back side
 
   card.add(textMesh);
 
-  if (url) setupHoverAndClick(textMesh, textMaterial, url);
+  if (url) createClickableArea(textMesh, url);
 }
 
-// **Handle Hover & Click (Now Works on Mobile & Desktop)**
-function setupHoverAndClick(textMesh, textMaterial, url) {
-  const raycaster = new THREE.Raycaster();
-  const mouse = new THREE.Vector2();
+// **Create a Transparent Clickable Area Behind Text**
+function createClickableArea(textMesh, url) {
+  const planeGeometry = new THREE.PlaneGeometry(1.5, 0.3); // Adjust size as needed
+  const planeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 });
+  const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
 
-  function checkIntersection(event) {
-    if (event.touches) {
-      const touch = event.touches[0];
-      mouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
-    } else {
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    }
+  planeMesh.position.copy(textMesh.position);
+  card.add(planeMesh);
 
-    raycaster.setFromCamera(mouse, camera);
-    return raycaster.intersectObject(textMesh).length > 0;
-  }
+  clickableElements.push({ mesh: planeMesh, url });
+}
 
-  function onMouseMove(event) {
-    if (checkIntersection(event)) {
-      textMaterial.color.set(0x00ff00); // Green on hover
-      document.body.style.cursor = "pointer";
-    } else {
-      textMaterial.color.set(0x000000); // Reset to black
-      document.body.style.cursor = "default";
-    }
-  }
+// **Handle Clicks Without Raycasting**
+window.addEventListener("click", (event) => {
+  const x = (event.clientX / window.innerWidth) * 2 - 1;
+  const y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-  function onMouseClick(event) {
-    if (checkIntersection(event)) {
-      textMaterial.color.set(0x0000ff); // Blue on click
+  // Convert screen coordinates to world coordinates
+  const vector = new THREE.Vector3(x, y, 0.5).unproject(camera);
+
+  // Check which clickable element was clicked
+  clickableElements.forEach(({ mesh, url }) => {
+    const distance = mesh.position.distanceTo(vector);
+    if (distance < 1) {
       window.open(url, "_blank");
     }
-  }
+  });
+});
 
-  window.addEventListener("mousemove", onMouseMove);
-  window.addEventListener("click", onMouseClick);
-  window.addEventListener("touchstart", onMouseClick, { passive: true }); // Works on mobile
-}
+// Also add touch event for mobile
+window.addEventListener("touchstart", (event) => {
+  const x = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
+  const y = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
+
+  const vector = new THREE.Vector3(x, y, 0.5).unproject(camera);
+
+  clickableElements.forEach(({ mesh, url }) => {
+    const distance = mesh.position.distanceTo(vector);
+    if (distance < 1) {
+      window.open(url, "_blank");
+    }
+  });
+});
 
 // **Sound Effect**
 const sound = new Audio("https://raw.githubusercontent.com/moritzgauss/strassstein/refs/heads/main/Effet.mp3");
