@@ -12,162 +12,148 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Controls
+// OrbitControls
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
-// Lighting
+// Lights
 const mainLight = new THREE.DirectionalLight(0xffffff, 1.5);
 mainLight.position.set(0, 3, 3);
 scene.add(mainLight);
 
-const frontLight = new THREE.PointLight(0xffffff, 2, 15);
-frontLight.position.set(0, 3, 3);
-scene.add(frontLight);
-
-const backLight = new THREE.PointLight(0xffffff, 4, 20);
-backLight.position.set(0, -3, -3);
-scene.add(backLight);
-
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
 scene.add(ambientLight);
 
-// Card
-const cardMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3, metalness: 0.1 });
-const cardGeometry = new THREE.BoxGeometry(3.5, 2, 0.05);
+// Visitenkarte (thinner card)
+const cardMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8, metalness: 0 });
+const cardGeometry = new THREE.BoxGeometry(3.5, 2, 0.05); // Thinner card (0.05)
 const card = new THREE.Mesh(cardGeometry, cardMaterial);
 scene.add(card);
 
-// Store clickable elements
-const clickableElements = [];
+// Function to update card position and scaling based on window size
+const updateCardTransform = () => {
+  if (window.innerWidth < 768) {
+    // Mobile: Keep current position and scaling
+    card.position.set(-0.5, -0.05, 0);
+    card.scale.set(0.5, 0.5, 0.5);
+    card.rotation.x = -0.8;
+  } else {
+    // Desktop: Center the card
+    card.position.set(0, 0, 0);
+    card.scale.set(1, 1, 1);
+    card.rotation.x = -0.8;
+  }
+};
+updateCardTransform();
+window.addEventListener("resize", updateCardTransform);
 
-// Font Loader (using Oswald font)
+// FontLoader for Text
 const fontLoader = new FontLoader();
-fontLoader.load("https://fonts.gstatic.com/s/oswald/v48/TK3pXvHf49KHT1yF7K7J6iYoxw.ttf", (font) => {
-  // **Front Side**
-  createText("STRASSSTEIN CALL CENTER", { x: 0, y: 0.6, z: 0.03 }, font);
-  createText("FOR GRAPHIC SWAG", { x: 0, y: 0.2, z: 0.03 }, font);
-  createText("CLICK ME", { x: 0, y: -0.2, z: 0.03 }, font, "https://example.com");
+fontLoader.load(
+  "https://raw.githubusercontent.com/moritzgauss/strassstein/main/Oswald_Regular.json", // Oswald font
+  function (font) {
+    // Function to create text (reduced extrusion, no outline)
+    const createText = (text, yOffset, size = 0.15, color = 0x000000, url = null) => {
+      const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.3, metalness: 0.5 });
+      const textGeometry = new TextGeometry(text, {
+        font: font,
+        size: size,
+        height: 0.005, // Reduced extrusion
+        bevelEnabled: false, // No bevel
+      });
 
-  // **Back Side (Flipped)**
-  createText("CONTACT DETAILS", { x: 0, y: 0.6, z: -0.03 }, font, null, true);
-  createText("Phone: +123 456 789", { x: 0, y: 0.2, z: -0.03 }, font, null, true);
-  createText("Email: example@email.com", { x: 0, y: -0.2, z: -0.03 }, font, null, true);
-  createText("Instagram", { x: 0, y: -0.5, z: -0.03 }, font, "https://instagram.com/strasssteincallcenter", true);
-});
+      textGeometry.center(); // Center the text geometry
+      textGeometry.translate(0, yOffset, 0.1); // Position the text
 
-// **Create Text Function (Clickable)**
-function createText(text, position, font, url = null, flip = false) {
-  const textMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 });
-  const textGeometry = new TextGeometry(text, {
-    font,
-    size: 0.15,
-    height: 0.01,
-    bevelEnabled: false
-  });
+      const textMesh = new THREE.Mesh(textGeometry, material);
+      textMesh.userData = { color, url }; // Store color and URL
 
-  textGeometry.center();
-  const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-  textMesh.position.set(position.x, position.y, position.z);
+      card.add(textMesh);
+      return textMesh;
+    };
 
-  if (flip) textMesh.rotation.y = Math.PI; // Flip text for back side
+    // Front Texts (Oswald font)
+    createText("STRASSSTEIN CALL CENTER", 0.6, 0.2);
+    createText("For Graphic Swag", 0.2, 0.15);
 
-  card.add(textMesh);
+    // Back Text (Helvetiker font for contact details)
+    fontLoader.load("https://raw.githubusercontent.com/moritzgauss/strassstein/main/Helvetiker_Regular.json", function (helvetikerFont) {
+      createText("Contact Details", -0.6, 0.15, 0x000000, null, null, helvetikerFont);
+      const linkMesh = createText("-->ENTER<--", -0.8, 0.12, 0xff0000, "https://youtu.be/U_IbIMUbh-k", helvetikerFont);
+      linkMesh.position.set(0, -0.8, 0); // Move the link to the bottom of the contact details section
+    });
 
-  if (url) createClickableArea(textMesh, url);
-}
+    // Raycaster for clicks
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    let hoveredObject = null;
 
-// **Create a Transparent Clickable Area Behind Text**
-function createClickableArea(textMesh, url) {
-  const planeGeometry = new THREE.PlaneGeometry(1.5, 0.3); // Adjust size as needed
-  const planeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 });
-  const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+    function onPointerMove(event) {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-  planeMesh.position.copy(textMesh.position);
-  card.add(planeMesh);
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(card.children);
 
-  clickableElements.push({ mesh: planeMesh, url });
-}
+      let foundLink = false;
+      for (let obj of intersects) {
+        if (obj.object.userData.url) {
+          foundLink = true;
+          if (hoveredObject !== obj.object) {
+            if (hoveredObject) {
+              hoveredObject.material.color.set(hoveredObject.userData.color);
+            }
+            obj.object.material.color.set(0xffff00); // Change color on hover
+            hoveredObject = obj.object;
+          }
+          break;
+        }
+      }
 
-// **Handle Clicks Without Raycasting**
-window.addEventListener("click", (event) => {
-  const x = (event.clientX / window.innerWidth) * 2 - 1;
-  const y = -(event.clientY / window.innerHeight) * 2 + 1;
+      if (!foundLink && hoveredObject) {
+        hoveredObject.material.color.set(hoveredObject.userData.color);
+        hoveredObject = null;
+      }
 
-  // Convert screen coordinates to world coordinates
-  const vector = new THREE.Vector3(x, y, 0.5).unproject(camera);
-
-  // Check which clickable element was clicked
-  clickableElements.forEach(({ mesh, url }) => {
-    const distance = mesh.position.distanceTo(vector);
-    if (distance < 1) {
-      window.open(url, "_blank");
+      document.body.style.cursor = foundLink ? "pointer" : "default";
     }
-  });
-});
 
-// Also add touch event for mobile
-window.addEventListener("touchstart", (event) => {
-  const x = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
-  const y = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
+    function onPointerClick(event) {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-  const vector = new THREE.Vector3(x, y, 0.5).unproject(camera);
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(card.children);
 
-  clickableElements.forEach(({ mesh, url }) => {
-    const distance = mesh.position.distanceTo(vector);
-    if (distance < 1) {
-      window.open(url, "_blank");
+      for (let intersect of intersects) {
+        if (intersect.object.userData.url) {
+          window.open(intersect.object.userData.url, "_blank");
+          return;
+        }
+      }
     }
-  });
-});
 
-// **Sound Effect**
-const sound = new Audio("https://raw.githubusercontent.com/moritzgauss/strassstein/refs/heads/main/Effet.mp3");
-sound.loop = false;
+    window.addEventListener("mousemove", onPointerMove);
+    window.addEventListener("click", onPointerClick);
+    window.addEventListener("touchmove", onPointerMove);
+    window.addEventListener("touchstart", onPointerClick);
+  }
+);
 
-// **Play Sound Every Click with 50% Volume**
-window.addEventListener("click", () => {
-  sound.volume = 0.5;
-  sound.play().catch((err) => console.error("Failed to play audio:", err));
-});
-
-// **Random Card Rotation Animation**
-let isRotating = false;
-setInterval(() => {
-  if (isRotating) return;
-  isRotating = true;
-
-  const initialRotationX = card.rotation.x;
-  const initialRotationY = card.rotation.y;
-  const duration = 2000;
-  const startTime = performance.now();
-
-  const animateRotation = (time) => {
-    const progress = Math.min((time - startTime) / duration, 1);
-    const easing = 1 - Math.pow(1 - progress, 3);
-
-    card.rotation.x = initialRotationX + easing * Math.PI * 2;
-    card.rotation.y = initialRotationY + easing * Math.PI * 2;
-
-    if (progress < 1) {
-      requestAnimationFrame(animateRotation);
-    } else {
-      isRotating = false;
-    }
-  };
-
-  requestAnimationFrame(animateRotation);
-}, 10000);
-
-// **Render Loop**
+// Animation
+let time = 0;
 const animate = () => {
   requestAnimationFrame(animate);
+
+  time += 0.02;
+  card.rotation.y = Math.sin(time) * 0.2;
+
   controls.update();
   renderer.render(scene, camera);
 };
 animate();
 
-// **Resize Handling**
+// Window resize
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
