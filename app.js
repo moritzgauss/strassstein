@@ -53,7 +53,7 @@ fontLoader.load(
   "https://raw.githubusercontent.com/moritzgauss/strassstein/main/Oswald_Regular.json", // Oswald font
   function (font) {
     // Function to create text (reduced extrusion, no outline)
-    const createText = (text, yOffset, size = 0.15, color = 0x000000, url = null) => {
+    const createText = (text, yOffset, size = 0.15, color = 0x000000, url = null, font = font) => {
       const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.3, metalness: 0.5 });
       const textGeometry = new TextGeometry(text, {
         font: font,
@@ -78,7 +78,7 @@ fontLoader.load(
 
     // Back Text (Helvetiker font for contact details)
     fontLoader.load("https://raw.githubusercontent.com/moritzgauss/strassstein/main/Helvetiker_Regular.json", function (helvetikerFont) {
-      createText("Contact Details", -0.6, 0.15, 0x000000, null, null, helvetikerFont);
+      createText("Contact Details", -0.6, 0.15, 0x000000, null, helvetikerFont);
       const linkMesh = createText("-->ENTER<--", -0.8, 0.12, 0xff0000, "https://youtu.be/U_IbIMUbh-k", helvetikerFont);
       linkMesh.position.set(0, -0.8, 0); // Move the link to the bottom of the contact details section
     });
@@ -140,13 +140,27 @@ fontLoader.load(
   }
 );
 
-// Animation
+// Sound effect
+const sound = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'); // Example sound URL
 let time = 0;
+const playSoundEvery10Secs = () => {
+  if (time % 10 === 0) {
+    sound.play();
+  }
+};
+
+// Animation
 const animate = () => {
   requestAnimationFrame(animate);
 
   time += 0.02;
-  card.rotation.y = Math.sin(time) * 0.2;
+
+  // Card rotation every 10 seconds
+  if (time % 10 < 0.02) {
+    card.rotation.y += Math.PI / 6; // Rotate the card every 10 seconds
+  }
+
+  playSoundEvery10Secs();
 
   controls.update();
   renderer.render(scene, camera);
