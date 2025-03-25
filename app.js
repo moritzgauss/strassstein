@@ -41,9 +41,9 @@ scene.add(card);
 // Store clickable elements
 const clickableElements = [];
 
-// Font Loader
+// Font Loader (using Oswald font)
 const fontLoader = new FontLoader();
-fontLoader.load("https://cdn.jsdelivr.net/npm/three@0.155.0/examples/fonts/helvetiker_regular.typeface.json", (font) => {
+fontLoader.load("https://fonts.gstatic.com/s/oswald/v48/TK3pXvHf49KHT1yF7K7J6iYoxw.ttf", (font) => {
   // **Front Side**
   createText("STRASSSTEIN CALL CENTER", { x: 0, y: 0.6, z: 0.03 }, font);
   createText("FOR GRAPHIC SWAG", { x: 0, y: 0.2, z: 0.03 }, font);
