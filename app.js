@@ -16,7 +16,7 @@ document.body.appendChild(renderer.domElement);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
-// Lighting (Restored)
+// Lighting
 const mainLight = new THREE.DirectionalLight(0xffffff, 1.5);
 mainLight.position.set(0, 3, 3);
 scene.add(mainLight);
@@ -32,7 +32,7 @@ scene.add(backLight);
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
 
-// Card Material & Geometry
+// Card
 const cardMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3, metalness: 0.1 });
 const cardGeometry = new THREE.BoxGeometry(3.5, 2, 0.05);
 const card = new THREE.Mesh(cardGeometry, cardMaterial);
@@ -46,7 +46,7 @@ fontLoader.load("https://cdn.jsdelivr.net/npm/three@0.155.0/examples/fonts/helve
   createText("FOR GRAPHIC SWAG", { x: 0, y: 0.2, z: 0.03 }, font);
   createText("CLICK ME", { x: 0, y: -0.2, z: 0.03 }, font, "https://example.com");
 
-  // **Back Side (Flipped Correctly)**
+  // **Back Side (Flipped)**
   createText("CONTACT DETAILS", { x: 0, y: 0.6, z: -0.03 }, font, null, true);
   createText("Phone: +123 456 789", { x: 0, y: 0.2, z: -0.03 }, font, null, true);
   createText("Email: example@email.com", { x: 0, y: -0.2, z: -0.03 }, font, null, true);
@@ -55,7 +55,7 @@ fontLoader.load("https://cdn.jsdelivr.net/npm/three@0.155.0/examples/fonts/helve
 
 // **Create Text Function**
 function createText(text, position, font, url = null, flip = false) {
-  const color = url ? 0x00ff00 : 0x000000; // Links are green, others black
+  const color = url ? 0x00ff00 : 0x000000; // Links green, others black
   const textMaterial = new THREE.MeshStandardMaterial({ color });
   const textGeometry = new TextGeometry(text, {
     font,
@@ -68,24 +68,36 @@ function createText(text, position, font, url = null, flip = false) {
   const textMesh = new THREE.Mesh(textGeometry, textMaterial);
   textMesh.position.set(position.x, position.y, position.z);
 
-  if (flip) textMesh.rotation.y = Math.PI; // Flip text for back of the card
+  if (flip) textMesh.rotation.y = Math.PI; // Flip text for back
 
   card.add(textMesh);
 
   if (url) setupHoverAndClick(textMesh, textMaterial, url);
 }
 
-// **Handle Hover & Click Effects**
+// **Handle Hover & Click (Now Works on Mobile)**
 function setupHoverAndClick(textMesh, textMaterial, url) {
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
 
-  function onMouseMove(event) {
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    raycaster.setFromCamera(mouse, camera);
+  function checkIntersection(event) {
+    if (event.touches) {
+      // Handle touch events
+      const touch = event.touches[0];
+      mouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
+    } else {
+      // Handle mouse events
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    }
 
-    if (raycaster.intersectObject(textMesh).length > 0) {
+    raycaster.setFromCamera(mouse, camera);
+    return raycaster.intersectObject(textMesh).length > 0;
+  }
+
+  function onMouseMove(event) {
+    if (checkIntersection(event)) {
       textMaterial.color.set(0x0000ff); // Change to blue on hover
       document.body.style.cursor = "pointer";
     } else {
@@ -94,14 +106,15 @@ function setupHoverAndClick(textMesh, textMaterial, url) {
     }
   }
 
-  function onMouseClick(event) {
-    if (raycaster.intersectObject(textMesh).length > 0) {
+  function onClick(event) {
+    if (checkIntersection(event)) {
       window.open(url, "_blank");
     }
   }
 
   window.addEventListener("mousemove", onMouseMove);
-  window.addEventListener("click", onMouseClick);
+  window.addEventListener("click", onClick);
+  window.addEventListener("touchstart", onClick); // Added for mobile touch
 }
 
 // **Sound Effect**
