@@ -47,13 +47,13 @@ const updateCardTransform = () => {
 updateCardTransform();
 window.addEventListener("resize", updateCardTransform);
 
-// FontLoader for Text
+// FontLoader for Oswald font (from GitHub)
 const fontLoader = new FontLoader();
 fontLoader.load(
   "https://raw.githubusercontent.com/moritzgauss/strassstein/main/Oswald_Regular.json", // Oswald font
   function (font) {
     // Function to create text (reduced extrusion, no outline)
-    const createText = (text, yOffset, size = 0.15, color = 0x000000, url = null, font = font) => {
+    const createText = (text, yOffset, size = 0.15, color = 0x000000, url = null) => {
       const material = new THREE.MeshStandardMaterial({ color: color, roughness: 0.3, metalness: 0.5 });
       const textGeometry = new TextGeometry(text, {
         font: font,
@@ -75,68 +75,76 @@ fontLoader.load(
     // Front Texts (Oswald font)
     createText("STRASSSTEIN CALL CENTER", 0.6, 0.2);
     createText("For Graphic Swag", 0.2, 0.15);
+  }
+);
 
+// FontLoader for Helvetiker (from CDN)
+const helvetikerFontLoader = new FontLoader();
+helvetikerFontLoader.load(
+  "https://cdn.jsdelivr.net/npm/three@0.155.0/examples/fonts/helvetiker_regular.typeface.json", // Helvetiker font from CDN
+  function (font) {
     // Back Text (Helvetiker font for contact details)
-    fontLoader.load("https://raw.githubusercontent.com/moritzgauss/strassstein/main/Helvetiker_Regular.json", function (helvetikerFont) {
-      createText("Contact Details", -0.6, 0.15, 0x000000, null, helvetikerFont);
-      const linkMesh = createText("-->ENTER<--", -0.8, 0.12, 0xff0000, "https://youtu.be/U_IbIMUbh-k", helvetikerFont);
-      linkMesh.position.set(0, -0.8, 0); // Move the link to the bottom of the contact details section
+    const contactText = new TextGeometry("Contact Details", {
+      font: font,
+      size: 0.1,
+      height: 0.005,
+      bevelEnabled: false,
     });
+    const contactMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 });
+    const contactMesh = new THREE.Mesh(contactText, contactMaterial);
+    contactMesh.position.set(-1.5, -0.5, 0);
+    card.add(contactMesh);
 
-    // Raycaster for clicks
+    // Visit Website Link (Helvetiker font)
+    const linkText = new TextGeometry("Visit Website", {
+      font: font,
+      size: 0.1,
+      height: 0.005,
+      bevelEnabled: false,
+    });
+    const linkMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 }); // Green text
+    const linkMesh = new THREE.Mesh(linkText, linkMaterial);
+    linkMesh.position.set(-1.5, -1, 0);
+    card.add(linkMesh);
+
+    // Raycasting for Mouse Hover
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
-    let hoveredObject = null;
 
-    function onPointerMove(event) {
+    // Function to update mouse position on hover and apply hover effect
+    const onMouseMove = (event) => {
+      // Normalize mouse coordinates
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
+      // Update raycaster with mouse position
       raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(card.children);
 
-      let foundLink = false;
-      for (let obj of intersects) {
-        if (obj.object.userData.url) {
-          foundLink = true;
-          if (hoveredObject !== obj.object) {
-            if (hoveredObject) {
-              hoveredObject.material.color.set(hoveredObject.userData.color);
-            }
-            obj.object.material.color.set(0xffff00); // Change color on hover
-            hoveredObject = obj.object;
-          }
-          break;
-        }
+      // Check if mouse intersects with the text
+      const intersects = raycaster.intersectObject(linkMesh);
+
+      if (intersects.length > 0) {
+        // Apply hover effect (underline and color change)
+        linkMaterial.color.set(0x0000ff); // Blue color on hover
+        linkText.parameters.size = 0.11; // Slightly increase the size on hover
+      } else {
+        // Reset hover effect
+        linkMaterial.color.set(0x00ff00); // Green color
+        linkText.parameters.size = 0.1;
       }
+    };
 
-      if (!foundLink && hoveredObject) {
-        hoveredObject.material.color.set(hoveredObject.userData.color);
-        hoveredObject = null;
+    // Event listener for mouse move (hover effect)
+    window.addEventListener("mousemove", onMouseMove);
+
+    // Add click event for navigation
+    window.addEventListener("click", (event) => {
+      const intersects = raycaster.intersectObject(linkMesh);
+      if (intersects.length > 0) {
+        // Navigate to website when clicked
+        window.open("https://apinchofsalt.de/", "_blank");
       }
-
-      document.body.style.cursor = foundLink ? "pointer" : "default";
-    }
-
-    function onPointerClick(event) {
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(card.children);
-
-      for (let intersect of intersects) {
-        if (intersect.object.userData.url) {
-          window.open(intersect.object.userData.url, "_blank");
-          return;
-        }
-      }
-    }
-
-    window.addEventListener("mousemove", onPointerMove);
-    window.addEventListener("click", onPointerClick);
-    window.addEventListener("touchmove", onPointerMove);
-    window.addEventListener("touchstart", onPointerClick);
+    });
   }
 );
 
@@ -163,13 +171,3 @@ const animate = () => {
   playSoundEvery10Secs();
 
   controls.update();
-  renderer.render(scene, camera);
-};
-animate();
-
-// Window resize
-window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
