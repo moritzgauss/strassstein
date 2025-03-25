@@ -71,11 +71,11 @@ fontLoader.load(
     createText("For Graphic Swag", 0.2, 0.15);
     createText("<3 ‹› $$", -0.2, 0.15);
 
-    // **Kontakt Details** - auf der Vorderseite der Karte
-    createText("Email: contact@strassstein.com", -0.6, 0.12);
-    createText("Phone: +123 456 789", -0.8, 0.12);
+    // **Kontakt Details auf der Rückseite der Karte**
+    createText("Email: contact@strassstein.com", -1.0, 0.12);
+    createText("Phone: +123 456 789", -1.2, 0.12);
 
-    // **Link auf die Rückseite verschieben**
+    // **Link auf der Rückseite**
     const linkMesh = createText("BIGGEST INFLUENCE", -1.4, 0.12, 0x0000ff);
     linkMesh.userData = { isLink: true };
 
