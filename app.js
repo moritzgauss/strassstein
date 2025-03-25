@@ -71,15 +71,19 @@ fontLoader.load(
     createText("For Graphic Swag", 0.2, 0.15);
     createText("<3 ‹› $$", -0.2, 0.15);
 
-    // **Klickbarer Link**
-    const linkMesh = createText("BIGGEST INFLUENCE", -0.6, 0.12, 0x0000ff);
+    // **Kontakt Details**
+    createText("Email: contact@strassstein.com", -0.8, 0.12);
+    createText("Phone: +123 456 789", -1.0, 0.12);
+
+    // **Link auf die Rückseite verschieben**
+    const linkMesh = createText("BIGGEST INFLUENCE", -1.4, 0.12, 0x0000ff);
     linkMesh.userData = { isLink: true };
 
-    // **Unsichtbare Hitbox für einfacheren Klick**
+    // **Unsichtbare Hitbox für den Link**
     const hitboxGeometry = new THREE.PlaneGeometry(2.2, 0.35); // Etwas größer gemacht
     const hitboxMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
     const hitbox = new THREE.Mesh(hitboxGeometry, hitboxMaterial);
-    hitbox.position.set(0, -0.6, 0.031);
+    hitbox.position.set(0, -1.4, 0.031);
     hitbox.userData = { isLink: true };
     card.add(hitbox);
 
@@ -99,6 +103,15 @@ fontLoader.load(
       const intersects = raycaster.intersectObjects(card.children);
 
       document.body.style.cursor = intersects.some((obj) => obj.object.userData.isLink) ? "pointer" : "default";
+
+      // Hover Effect für den Link
+      intersects.forEach((obj) => {
+        if (obj.object.userData.isLink) {
+          obj.object.material.color.set(0x00ff00); // Grün bei Hover
+        } else {
+          obj.object.material.color.set(0x0000ff); // Original Farbe
+        }
+      });
     }
 
     function onPointerClick(event) {
