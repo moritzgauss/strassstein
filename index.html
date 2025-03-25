@@ -1,20 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Business Card</title>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <title>Strassstein Call Center</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100vw; height: 100vh; overflow: hidden; }
+        canvas { display: block; }
+
+        /* Hintergrundbild mit Overlay */
+        body::before {
+            content: "";
+            position: fixed;
+            width: 100vw; height: 100vh;
+            background: url('https://i.pinimg.com/736x/7d/c3/75/7dc3759b60b2918c657830fcf8ec70af.jpg') no-repeat;
+            z-index: -2;
+        }
+        body::after {
+            content: "";
+            position: fixed;
+            width: 100vw; height: 100vh;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: -1;
+        }
+    </style>
+    <script type="importmap">
+        {
+          "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.155.0/examples/jsm/"
+          }
+        }
+    </script>
 </head>
 <body>
-    <div class="business-card">
-        <div class="card-front">
-            <h1>strassstein Valente callcenter</h1>
-        </div>
-        <div class="card-back">
-            <a href="https://github.com/moritzgauss/strassstein/blob/main/app.js">GitHub Repository</a>
-        </div>
-    </div>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
