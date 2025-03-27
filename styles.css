@@ -1,53 +1,170 @@
-body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+* {
     margin: 0;
-    background-color: #f0f0f0;
-    font-family: 'Oswald', sans-serif;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-.business-card {
-    width: 300px;
-    height: 200px;
+@font-face {
+    font-family: 'Cooper Black';
+    src: url('/cooper-black-webfont.woff') format('woff');
+}
+
+body {
+    font-family: 'Cooper Black', 'Helvetica Neue', sans-serif;
+    background: #f0f0f0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     perspective: 1000px;
 }
 
-.card-front, .card-back {
+.scene {
+    width: 350px;
+    height: 200px;
+    perspective: 600px;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+}
+
+.card {
     width: 100%;
     height: 100%;
-    position: absolute;
-    backface-visibility: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+    transition: transform 1s;
+    transform-style: preserve-3d;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.9); /* Slightly transparent to see stickmen */
 }
 
-.card-front {
-    background-color: #fff;
-}
-
-.card-back {
-    background-color: #007BFF;
-    color: #fff;
+.card.is-flipped {
     transform: rotateY(180deg);
 }
 
-.business-card {
-    position: relative;
-    transform-style: preserve-3d;
-    animation: rotate-card 10s infinite linear;
+.card__face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    border-radius: 10px;
 }
 
-@keyframes rotate-card {
-    0%, 50% {
-        transform: rotateY(0deg);
+.card__face--front {
+    background: white;
+    background-image: url('./Paper001_1K-JPG_Color.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.9;
+    image-rendering: -webkit-optimize-contrast; /* Improve image sharpness */
+    -webkit-backface-visibility: hidden; /* Fix potential flickering */
+    -moz-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+/* Add overlay for better text readability */
+.card__face--front::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('/Firefly20250327185246.png');
+    background-size: cover;
+    pointer-events: none;
+}
+
+.card__face--back {
+    background: white;
+    transform: rotateY(180deg);
+}
+
+.logo, .title, .subtitle {
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 0 5px rgba(255, 255, 0, 0.6),
+                 0 0 5px rgba(255, 255, 0, 0.6),
+                 0 0 4px rgba(255, 255, 0, 0.6);
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.title {
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: #000000;
+}
+
+.contact-links {
+    margin-top: 20px;
+}
+
+.contact-links a {
+    color: #000;
+    text-decoration: none;
+    font-size: 16px;
+    transition: color 0.3s ease, text-shadow 0.3s ease;
+    text-shadow: 0 0 5px rgba(255, 255, 0, 0.6);
+}
+
+.contact-links a:hover {
+    color: #ff0000;
+    text-shadow: 0 0 5px rgba(255, 255, 0, 0.8),
+                 0 0 5px rgba(255, 255, 0, 0.8);
+}
+
+/* Add hover effect */
+.card:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Add 3D lighting effect */
+.card__face::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        45deg,
+        rgba(255,255,255,0.1) 0%,
+        rgba(255,255,255,0.05) 100%
+    );
+    pointer-events: none;
+}
+
+/* Add responsive design */
+@media (max-width: 400px) {
+    .scene {
+        width: 280px;
+        height: 160px;
     }
-    50.01%, 100% {
-        transform: rotateY(180deg);
+    
+    .logo {
+        font-size: 20px;
+    }
+    
+    .title {
+        font-size: 16px;
+    }
+    
+    .subtitle {
+        font-size: 12px;
     }
 }

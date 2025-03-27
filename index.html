@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strassstein 3D Business Card</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Import Three.js and modules -->
+    <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body>
+    <!-- Background canvas will be inserted here by Three.js -->
+    
+    <!-- Business card -->
+    <div class="scene">
+        <div class="card">
+            <div class="card__face card__face--front">
+                <div class="logo">STRASSSTEIN</div>
+                <div class="title">CALL CENTER</div>
+                <div class="subtitle">For Graphic Swag</div>
+            </div>
+            <div class="card__face card__face--back">
+                <h2>CONTACT</h2>
+                <div class="contact-links">
+                    <a href="https://instagram.com/strasssteincallcenter" target="_blank">Instagram</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="app.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
